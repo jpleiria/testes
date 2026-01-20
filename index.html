@@ -152,8 +152,17 @@
     map.fitBounds([[39.63, -9.02], [39.97, -8.55]]);
 
     // Mini Mapa (Janela de Zoom)
-    const miniMap = L.map('miniMap', { zoomControl: false, attributionControl: false, zoomSnap: 0, dragging: false });
-    currentMiniLayer = L.tileLayer(getTrafficUrl(), { maxZoom: 20 }).addTo(miniMap);
+const miniMap = L.map('miniMap', { 
+    zoomControl: false, 
+    attributionControl: false, 
+    zoomSnap: 0, 
+    dragging: false,
+    fadeAnimation: false // Desativar animação evita o flash cinzento
+});
+currentMiniLayer = L.tileLayer(getTrafficUrl(), { 
+    maxZoom: 20,
+    updateWhenIdle: false 
+}).addTo(miniMap);
 
     const hotSpots = [
         { name: "ROTUNDA - D. DINIS", loc: [39.73926874806997, -8.818065427592712], zoom: 17 },
@@ -192,24 +201,34 @@
     }
 
     function updateSpot() {
-        const spot = hotSpots[currentSpotIndex];
-        // Forçar o Leaflet a re-renderizar o mapa caso tenha ficado cinzento
-        miniMap.invalidateSize();
-        miniMap.setView(spot.loc, spot.zoom, { animate: false });
-        document.getElementById('spotName').innerText = spot.name;
-        timeLeft = ROTATION_TIME;
-    }
+    const spot = hotSpots[currentSpotIndex];
+    
+    // Força o mapa a reconhecer o seu tamanho real antes de mudar a vista
+    miniMap.invalidateSize();
+    
+    // Mudar a localização
+    miniMap.setView(spot.loc, spot.zoom, { animate: false });
+    
+    document.getElementById('spotName').innerText = spot.name;
+    timeLeft = ROTATION_TIME;
+}
 
     // 4. ATUALIZAÇÃO DO TRÂNSITO (RESOLVE O PROBLEMA DO MAPA SUMIR)
     function seamlessRefresh() {
-        const url = getTrafficUrl();
-        
-        // Novo layer para o mapa principal
-        const nextMain = L.tileLayer(url, { maxZoom: 20 }).addTo(map);
-        nextMain.on('load', () => {
-            if (currentMainLayer) map.removeLayer(currentMainLayer);
-            currentMainLayer = nextMain;
-        });
+    const newUrl = getTrafficUrl();
+    
+    // Atualiza o mapa principal (aqui o método antigo funciona bem)
+    const nextMain = L.tileLayer(newUrl, { maxZoom: 20 }).addTo(map);
+    nextMain.on('load', () => {
+        if (currentMainLayer) map.removeLayer(currentMainLayer);
+        currentMainLayer = nextMain;
+    });
+
+    // NO MINI MAPA: Apenas trocamos a URL da camada atual
+    // Isto evita que o mapa fique "vazio" ao repetir o ciclo
+    if (currentMiniLayer) {
+        currentMiniLayer.setUrl(newUrl);
+    }
 
         // Novo layer para o mini mapa
         const nextMini = L.tileLayer(url, { maxZoom: 20 }).addTo(miniMap);
