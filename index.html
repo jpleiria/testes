@@ -333,24 +333,28 @@ async function addFreguesias() {
         if (!response.ok) return;
         const data = await response.json();
 
-        let colorIndex = 0;
+        // Função que garante uma cor diferente baseada no nome da freguesia
+        const getHash = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return Math.abs(hash);
+        };
 
         L.geoJSON(data, {
             style: function(feature) {
-                // Salta 2 cores para garantir que vizinhos no arquivo fiquem diferentes
-                const fillColor = highContrastPalette[colorIndex % highContrastPalette.length];
-                colorIndex += 2; 
+                const name = feature.properties.freguesia || feature.properties.name || "default";
+                const colorIdx = getHash(name) % highContrastPalette.length;
+                const fillColor = highContrastPalette[colorIdx];
 
                 return {
-                    // CONTORNO ÚNICO PARA TODAS
                     stroke: true,
-                    color: "#1743FF",   // Cor contorno freguesias
-                    weight: 2,          // Espessura média para definição clara
-                    opacity: 0.3,       // Bem translúcido para ser discreto
-
-                    // PREENCHIMENTO COLORIDO
+                    color: "#1743FF",
+                    weight: 2,
+                    opacity: 0.3,
                     fillColor: fillColor,
-                    fillOpacity: 0.12,  // Suave para não esconder as estradas
+                    fillOpacity: 0.12,
                     interactive: false
                 };
             }
