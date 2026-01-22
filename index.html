@@ -317,9 +317,14 @@ function getColor(d) {
     return colors[Math.abs(hash) % colors.length];
 }
 
+// 1. Paleta de alto contraste (sem verdes, amarelos ou vermelhos)
 const highContrastPalette = [
-    '#00f2ff', '#bc13fe', '#3b82f6', '#ff00ff', '#4f46e5', '#a855f7',
-    '#06b6d4', '#6366f1', '#d946ef', '#1d4ed8', '#7e22ce', '#0ea5e9'
+    '#00f2ff', // Cyan Neon
+    '#bc13fe', // Roxo Elétrico
+    '#3b82f6', // Azul Brilhante
+    '#ff00ff', // Magenta
+    '#4f46e5', // Índigo
+    '#a855f7'  // Violeta
 ];
 
 async function addFreguesias() {
@@ -331,23 +336,28 @@ async function addFreguesias() {
         let colorIndex = 0;
 
         L.geoJSON(data, {
-        style: function(feature) {
-            // Salto de 7 posições na paleta baseado no ID
-            const id = feature.id || 0;
-            const colorIndex = (id * 7) % highContrastPalette.length;
-            const fillColor = highContrastPalette[colorIndex];
+            style: function(feature) {
+                // Salta 2 cores para garantir que vizinhos no arquivo fiquem diferentes
+                const fillColor = highContrastPalette[colorIndex % highContrastPalette.length];
+                colorIndex += 2; 
 
-            return {
-                stroke: true,
-                color: "#ffffff",   // Contorno igual para todas
-                weight: 1.2,        
-                opacity: 0.15,      // Muito translúcido
-                fillColor: fillColor,
-                fillOpacity: 0.1,   // Bastante transparente sobre as estradas
-                interactive: false
-            };
-        }
-    }).addTo(map);
+                return {
+                    // CONTORNO ÚNICO PARA TODAS
+                    stroke: true,
+                    color: "#3557F2",   // Cor contorno freguesias
+                    weight: 2,          // Espessura média para definição clara
+                    opacity: 0.2,       // Bem translúcido para ser discreto
+
+                    // PREENCHIMENTO COLORIDO
+                    fillColor: fillColor,
+                    fillOpacity: 0.12,  // Suave para não esconder as estradas
+                    interactive: false
+                };
+            }
+        }).addTo(map);
+    } catch (e) {
+        console.error("Erro ao carregar freguesias:", e);
+    }
 }
 
 
